@@ -28,7 +28,9 @@ defmodule Mix.Tasks.TaskweftAcp.PlanSgd do
     Mix.Task.run("app.start")
 
     {opts, _, _} =
-      OptionParser.parse(argv, strict: [domain: :string, todo: :keep, out: :string, name: :string])
+      OptionParser.parse(argv,
+        strict: [domain: :string, todo: :keep, out: :string, name: :string]
+      )
 
     domain_path = Keyword.get(opts, :domain) || Domain.builtin_path()
     todo = opts |> Keyword.get_values(:todo) |> Enum.map(&String.split(&1, " ", trim: true))

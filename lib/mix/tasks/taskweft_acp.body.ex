@@ -31,18 +31,36 @@ defmodule Mix.Tasks.TaskweftAcp.Body do
 
     {opts, _, _} =
       OptionParser.parse(argv,
-        strict: [controller: :string, trace: :string, motion: :string, godot: :string, project: :string, compiler: :string]
+        strict: [
+          controller: :string,
+          trace: :string,
+          motion: :string,
+          godot: :string,
+          project: :string,
+          compiler: :string
+        ]
       )
 
     controller = Keyword.get(opts, :controller) || Mix.raise("--controller is required")
-    godot = Keyword.get(opts, :godot) || System.get_env("TASKWEFT_GODOT") || Mix.raise("--godot or TASKWEFT_GODOT is required")
-    project = Path.expand(Keyword.get(opts, :project) || "../../3-interactor/taskweft-godot-sandbox/priv/godot_project")
+
+    godot =
+      Keyword.get(opts, :godot) || System.get_env("TASKWEFT_GODOT") ||
+        Mix.raise("--godot or TASKWEFT_GODOT is required")
+
+    project =
+      Path.expand(
+        Keyword.get(opts, :project) ||
+          "../../3-interactor/taskweft-godot-sandbox/priv/godot_project"
+      )
+
     compiler = Keyword.get(opts, :compiler) || find_compiler()
 
     guest = Path.join([project, "plans", "body.sgd"])
     File.mkdir_p!(Path.dirname(guest))
 
-    case System.cmd(compiler, ["emit-scan", Path.expand(controller), guest], stderr_to_stdout: true) do
+    case System.cmd(compiler, ["emit-scan", Path.expand(controller), guest],
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {out, _} -> Mix.raise("the compiler refused #{controller}:\n#{out}")
     end
@@ -50,8 +68,18 @@ defmodule Mix.Tasks.TaskweftAcp.Body do
     host = Path.expand("priv/godot_project/body_host.gd", File.cwd!())
 
     args =
-      ["--headless", "--path", project, "--script", host, "--", "--controller", "res://plans/body.sgd"] ++
-        opt_args(opts, :trace, "--trace", &Path.expand/1) ++ opt_args(opts, :motion, "--motion", & &1)
+      [
+        "--headless",
+        "--path",
+        project,
+        "--script",
+        host,
+        "--",
+        "--controller",
+        "res://plans/body.sgd"
+      ] ++
+        opt_args(opts, :trace, "--trace", &Path.expand/1) ++
+        opt_args(opts, :motion, "--motion", & &1)
 
     {out, _code} = System.cmd(godot, args, stderr_to_stdout: true)
 
@@ -96,7 +124,11 @@ defmodule Mix.Tasks.TaskweftAcp.Body do
         File.mkdir_p!(dir)
 
         {:ok, pid} =
-          Store.start_link(name: nil, adapter: TaskweftAcp.Session.Store.Vfs, adapter_opts: [dir: dir, mode: :plain])
+          Store.start_link(
+            name: nil,
+            adapter: TaskweftAcp.Session.Store.Vfs,
+            adapter_opts: [dir: dir, mode: :plain]
+          )
 
         IO.puts(:stderr, "sessions: #{dir}")
         pid
@@ -114,7 +146,10 @@ defmodule Mix.Tasks.TaskweftAcp.Body do
   end
 
   defp find_compiler do
-    base = Path.expand("../../3-interactor/taskweft-fbd-compiler/.lake/build/bin/taskweft_fbd_compiler")
+    base =
+      Path.expand(
+        "../../3-interactor/taskweft-fbd-compiler/.lake/build/bin/taskweft_fbd_compiler"
+      )
 
     Enum.find([base <> ".exe", base], &File.exists?/1) ||
       Mix.raise("no taskweft-fbd-compiler build beside this checkout; pass --compiler")
