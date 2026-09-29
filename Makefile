@@ -1,5 +1,6 @@
 # The store helper. Plain mode links libsqlite3 only; WEFT_FABRIC=1 adds fabric-store's
-# weft_fdb VFS (thirdparty/store, a manifest linkfile) and libfdb_c.
+# weft_fdb VFS and libfdb_c. Both come from thirdparty/store, a git subtree of
+# datasource-store, so there is one copy of each.
 PRIV_DIR ?= priv
 CC ?= cc
 CFLAGS ?= -O2 -std=c11 -Wall -Wextra
@@ -22,8 +23,8 @@ all: $(TARGET)
 $(PRIV_DIR):
 	mkdir -p $(PRIV_DIR)
 
-$(TARGET): c_src/weft_sql.c $(FABRIC_SRC) | $(PRIV_DIR)
-	$(CC) $(CFLAGS) $(SQLITE_CFLAGS) $(FABRIC_CFLAGS) c_src/weft_sql.c $(FABRIC_SRC) -o $@ $(SQLITE_LIBS) $(FABRIC_LIBS)
+$(TARGET): thirdparty/store/weft_sql.c $(FABRIC_SRC) | $(PRIV_DIR)
+	$(CC) $(CFLAGS) $(SQLITE_CFLAGS) $(FABRIC_CFLAGS) thirdparty/store/weft_sql.c $(FABRIC_SRC) -o $@ $(SQLITE_LIBS) $(FABRIC_LIBS)
 
 clean:
 	rm -f $(TARGET)

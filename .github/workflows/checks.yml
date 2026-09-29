@@ -21,14 +21,13 @@ jobs:
           elixir-version: "1.20.4"
       # taskweft's NIF needs a C++ toolchain; the store helper needs SQLite's headers.
       - run: sudo apt-get update && sudo apt-get install -y build-essential libsqlite3-dev
+      # deps only. A cached _build ships stale beams, and a PLT restored across a
+      # toolchain change fails as "Old PLT file", so the key carries OTP and
+      # Elixir and there is no prefix fallback to an older one.
       - uses: actions/cache@v4
         with:
-          path: |
-            deps
-            _build
-            priv/plts
-          key: mix-${{ runner.os }}-${{ hashFiles('mix.lock') }}
-          restore-keys: mix-${{ runner.os }}-
+          path: deps
+          key: deps-${{ runner.os }}-otp29-ex1.20.4-${{ hashFiles('mix.lock') }}
       - run: mix deps.get
       - run: make
       - run: mix format --check-formatted
